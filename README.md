@@ -87,10 +87,14 @@ Cada invocación se registra automáticamente (herramienta, parámetros, duraci�
 
 > Ni `.env`, ni `credentials.json`, ni `token.json` están incluidos en este repositorio (excluidos en `.gitignore` por seguridad).
 
-## Manejo de errores y resiliencia
+## Manejo de errores
 
-Cada integración (Odoo, Gmail, TRM) devuelve un error controlado si el servicio no está disponible, en vez de un error crudo. El servidor MCP reintenta la conexión a Odoo al arrancar (hasta 10 intentos con espera de 3s) para tolerar tiempos de inicialización. Demostrado en el video de sustentación y detallado en el plan de pruebas (ítems PR-16 a PR-19).
+Cada integración (Odoo, Gmail, TRM) devuelve un error controlado si el servicio no está disponible, en vez de un error crudo.
 
-## Autor
+## Autores
 
-Sofía Suancha — Curso de Sistemas Distribuidos, 2026.
+Amaurys Castro De Arco
+Daniel Jimenez Salcedo
+Sofía Marcela Suancha Contreras
+— Curso de Sistemas Distribuidos -
+2026.
