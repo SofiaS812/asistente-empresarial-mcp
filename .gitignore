@@ -1,0 +1,27 @@
+# Entornos virtuales
+mcp-server/venv/
+venv/
+
+# Credenciales y secretos — NUNCA subir
+.env
+mcp-server/.env
+credentials.json
+mcp-server/credentials.json
+token.json
+mcp-server/token.json
+
+# Cache de Python
+__pycache__/
+*.pyc
+
+# Datos generados (opcional, pero recomendable)
+mcp-server/reportes_generados/*.pdf
+mcp-server/reportes_generados/*.xlsx
+mcp-server/logs/trazabilidad.db
+
+# Docker
+odoo/addons/__pycache__/
+
+# Sistema
+.DS_Store
+Thumbs.db
