@@ -93,8 +93,8 @@ Cada integración (Odoo, Gmail, TRM) devuelve un error controlado si el servicio
 
 ## Autores
 
-Amaurys Castro De Arco
-Daniel Jimenez Salcedo
+Amaurys Castro De Arco -
+Daniel Jimenez Salcedo -
 Sofía Marcela Suancha Contreras
 — Curso de Sistemas Distribuidos -
 2026.
