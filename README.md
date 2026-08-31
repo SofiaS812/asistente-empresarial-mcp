@@ -5,7 +5,7 @@ Proyecto de la asignatura **Sistemas Distribuidos**. Implementa un asistente emp
 ## Evaluación / Sustentación
 
 - 📄 **Plan de pruebas:** [`Plan_de_Pruebas_y_Guion_Sustentacion.docx`](./Plan_de_Pruebas_y_Guion_Sustentacion.docx) — tabla con los 21 ítems evaluados, pasos de prueba y resultados.
-- 🎥 **Video de sustentación (ejecución del plan de pruebas):** [enlace a YouTube](PEGAR_AQUÍ_EL_ENLACE)
+- 🎥 **Video de sustentación (ejecución del plan de pruebas):** [enlace a YouTube](https://www.youtube.com/watch?v=U274mP0mrEI)
 
 ## Arquitectura
 
