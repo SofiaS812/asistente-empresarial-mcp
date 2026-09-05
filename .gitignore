@@ -25,3 +25,9 @@ odoo/addons/__pycache__/
 # Sistema
 .DS_Store
 Thumbs.db
+
+# Entorno virtual de la aplicación web
+webapp/venv/
+
+# Variables de entorno de la aplicación web (contiene tu API key de Anthropic)
+webapp/.env

@@ -1,0 +1,236 @@
+<!doctype html>
+<html lang="es">
+<head>
+<script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Asistente Empresarial · Odoo · Gmail · TRM</title>
+<style>
+  :root {
+    --bg: #0d0f14;
+    --panel: #171a21;
+    --accent: #6c8ef5;
+    --accent-hover: #7d9cf7;
+    --text: #edeef2;
+    --muted: #8c93a3;
+    --user-bubble: #3651c4;
+    --bot-bubble: #1c202a;
+    --border: #262b38;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    font-family: -apple-system, "Segoe UI", Roboto, sans-serif;
+    background: radial-gradient(circle at top, #14161d 0%, var(--bg) 60%);
+    color: var(--text);
+    height: 100vh;
+    display: flex;
+    flex-direction: column;
+  }
+  header {
+    padding: 18px 28px;
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    backdrop-filter: blur(6px);
+  }
+  header .dot {
+    width: 9px; height: 9px; border-radius: 50%;
+    background: #4ade80;
+    box-shadow: 0 0 8px #4ade8099;
+  }
+  header h1 { font-size: 15px; font-weight: 600; margin: 0; letter-spacing: 0.2px; }
+  header .sub { color: var(--muted); font-size: 12px; margin-left: auto; }
+
+  #chat {
+    flex: 1;
+    overflow-y: auto;
+    padding: 28px;
+    display: flex;
+    flex-direction: column;
+    gap: 18px;
+    max-width: 780px;
+    margin: 0 auto;
+    width: 100%;
+  }
+  .empty-state {
+    color: var(--muted);
+    text-align: center;
+    margin-top: 80px;
+    font-size: 14px;
+    line-height: 1.7;
+  }
+  .msg {
+    max-width: 82%;
+    padding: 13px 17px;
+    border-radius: 16px;
+    line-height: 1.55;
+    font-size: 14.5px;
+    animation: aparecer 0.2s ease-out;
+  }
+  @keyframes aparecer {
+    from { opacity: 0; transform: translateY(6px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+  .msg.user {
+    align-self: flex-end;
+    background: linear-gradient(135deg, var(--user-bubble), #4a63d6);
+    border-bottom-right-radius: 4px;
+    white-space: pre-wrap;
+  }
+  .msg.bot {
+    align-self: flex-start;
+    background: var(--bot-bubble);
+    border: 1px solid var(--border);
+    border-bottom-left-radius: 4px;
+  }
+  .msg.bot.error { border-color: #e0605b; color: #ffb4b1; white-space: pre-wrap; }
+
+  .msg.bot table { border-collapse: collapse; width: 100%; margin: 10px 0; font-size: 13.5px; }
+  .msg.bot th, .msg.bot td { border: 1px solid var(--border); padding: 6px 10px; text-align: left; }
+  .msg.bot th { background: #232838; }
+  .msg.bot tr:nth-child(even) td { background: #191d26; }
+  .msg.bot p { margin: 0 0 10px 0; }
+  .msg.bot p:last-child { margin-bottom: 0; }
+  .msg.bot ul, .msg.bot ol { margin: 6px 0; padding-left: 20px; }
+  .msg.bot code { background: #232838; padding: 1px 5px; border-radius: 4px; font-size: 13px; }
+
+  .tools { font-size: 11px; color: var(--muted); margin-top: 10px; }
+  .tools span {
+    background: #1f2937;
+    border: 1px solid var(--border);
+    padding: 3px 9px;
+    border-radius: 20px;
+    margin-right: 6px;
+    display: inline-block;
+    margin-top: 4px;
+  }
+
+  form {
+    display: flex;
+    gap: 10px;
+    padding: 16px 28px 26px;
+    max-width: 780px;
+    margin: 0 auto;
+    width: 100%;
+  }
+  input[type=text] {
+    flex: 1;
+    background: var(--panel);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 13px 16px;
+    color: var(--text);
+    font-size: 14px;
+    transition: border-color 0.15s;
+  }
+  input[type=text]:focus { outline: none; border-color: var(--accent); }
+  button {
+    background: var(--accent);
+    border: none;
+    color: white;
+    padding: 0 22px;
+    border-radius: 12px;
+    font-weight: 600;
+    cursor: pointer;
+    font-size: 14px;
+    transition: background 0.15s;
+  }
+  button:hover:not(:disabled) { background: var(--accent-hover); }
+  button:disabled { opacity: 0.5; cursor: default; }
+  .loading { color: var(--muted); font-size: 13px; align-self: flex-start; padding-left: 4px; }
+</style>
+</head>
+<body>
+  <header>
+    <div class="dot"></div>
+    <h1>Asistente Empresarial Inteligente</h1>
+    <div class="sub">Odoo · Gmail · TRM — vía MCP</div>
+  </header>
+
+  <div id="chat">
+  <div class="empty-state" id="empty">
+    Escribe una consulta para empezar, por ejemplo:<br>
+    "¿Qué clientes tienes en Odoo?" · "¿Cuál es la TRM de hoy?" · "Genera un reporte de facturas en PDF"
+  </div>
+</div>
+
+  <form id="form">
+    <input type="text" id="input" placeholder="Escribe tu consulta..." autocomplete="off" />
+    <button type="submit" id="send">Enviar</button>
+  </form>
+
+<script>
+  const chat = document.getElementById("chat");
+  const form = document.getElementById("form");
+  const input = document.getElementById("input");
+  const sendBtn = document.getElementById("send");
+  let sessionId = null;
+
+  function addMessage(text, role, tools, isError) {
+    const empty = document.getElementById("empty");
+  if (empty) empty.remove();
+  
+  const div = document.createElement("div");
+  div.className = "msg " + role + (isError ? " error" : "");
+
+  if (role === "bot" && !isError) {
+    div.innerHTML = marked.parse(text);
+  } else {
+    div.textContent = text;
+  }
+
+    if (tools && tools.length) {
+      const t = document.createElement("div");
+      t.className = "tools";
+      t.innerHTML = "Herramientas MCP usadas: " +
+        tools.map(h => `<span>${h.nombre}</span>`).join("");
+      div.appendChild(t);
+    }
+
+    chat.appendChild(div);
+    chat.scrollTop = chat.scrollHeight;
+  }
+
+  form.addEventListener("submit", async (e) => {
+    e.preventDefault();
+    const mensaje = input.value.trim();
+    if (!mensaje) return;
+
+    addMessage(mensaje, "user");
+    input.value = "";
+    sendBtn.disabled = true;
+
+    const loading = document.createElement("div");
+    loading.className = "loading";
+    loading.textContent = "Consultando al servidor MCP...";
+    chat.appendChild(loading);
+    chat.scrollTop = chat.scrollHeight;
+
+    try {
+      const res = await fetch("/api/chat", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ message: mensaje, session_id: sessionId })
+      });
+      const data = await res.json();
+      loading.remove();
+
+      if (data.error) {
+        addMessage(data.error, "bot", null, true);
+      } else {
+        sessionId = data.session_id;
+        addMessage(data.reply, "bot", data.tools_used);
+      }
+    } catch (err) {
+      loading.remove();
+      addMessage("No se pudo conectar con el servidor: " + err, "bot", null, true);
+    } finally {
+      sendBtn.disabled = false;
+      input.focus();
+    }
+  });
+</script>
+</body>
+</html>

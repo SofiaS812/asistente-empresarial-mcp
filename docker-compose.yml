@@ -50,6 +50,19 @@ services:
     stdin_open: true
     tty: true
 
+  webapp:
+    build: ./webapp
+    container_name: webapp
+    restart: unless-stopped
+    depends_on:
+      - mcp-server
+    ports:
+      - "5000:5000"
+    env_file:
+      - ./webapp/.env
+    networks:
+      - mcp_network
+
 volumes:
   odoo_db_data:
   odoo_web_data:
