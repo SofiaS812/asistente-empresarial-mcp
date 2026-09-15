@@ -1,28 +1,34 @@
 # Asistente Empresarial Inteligente basado en Model Context Protocol (MCP)
 
-Proyecto de la asignatura **Sistemas Distribuidos**. Implementa un asistente empresarial que permite consultar y ejecutar operaciones sobre distintos sistemas de información (ERP, correo electrónico y una API pública) mediante lenguaje natural, usando **exclusivamente** el protocolo **MCP** como mecanismo de integración entre el modelo de lenguaje y los sistemas empresariales.
+Proyecto de la asignatura **Sistemas Distribuidos**. Implementa un asistente empresarial que permite a un usuario final consultar y ejecutar operaciones sobre distintos sistemas de información (ERP, correo electrónico y una API pública) mediante lenguaje natural, usando **exclusivamente** el protocolo **MCP** como mecanismo de integración entre el modelo de lenguaje y los sistemas empresariales.
 
 ## Evaluación / Sustentación
 
-- 📄 **Plan de pruebas:** [`Plan_de_Pruebas_y_Guion_Sustentacion.docx`](./Plan_de_Pruebas_y_Guion_Sustentacion.docx) — tabla con los 21 ítems evaluados, pasos de prueba y resultados.
-- 🎥 **Video de sustentación (ejecución del plan de pruebas):** [enlace a YouTube](https://www.youtube.com/watch?v=U274mP0mrEI)
+- 📄 **Plan de pruebas:** [`Plan_de_Pruebas_y_Guion_Sustentacion.docx`](./Plan_de_Pruebas_y_Guion_Sustentacion.docx) — 23 ítems evaluados, pasos de prueba y resultados, ejecutados desde la aplicación web.
+- 📄 **Tutorial de instalación y configuración de MCP:** [`Tutorial_Instalacion_Configuracion_MCP.docx`](./Tutorial_Instalacion_Configuracion_MCP.docx) — conceptualización, guía práctica con código y dos casos de estudio reales.
+- 🎥 **Video de sustentación:** [enlace a YouTube](PEGAR_AQUÍ_EL_ENLACE)
 
 ## Arquitectura
 
 ```
-Claude Desktop (cliente MCP)
-        │  HTTP → puerto 8000
+Usuario final (navegador)
+        │  http://localhost:5000
         ▼
-Contenedor mcp-server (servidor MCP en Python / FastMCP)
-        │ XML-RPC        │ REST (OAuth2)     │ HTTPS
-        ▼                ▼                    ▼
-Contenedor odoo    Gmail API (externa)   API pública TRM (datos.gov.co)
-        │
-        ▼
-Contenedor db (PostgreSQL)
+Contenedor webapp (Flask + cliente MCP propio)
+        │  API de Anthropic (Claude)         │  MCP sobre HTTP → puerto 8000
+        ▼                                     ▼
+   Claude (modelo)                    Contenedor mcp-server
+                                              │ XML-RPC     │ OAuth2      │ HTTPS
+                                              ▼             ▼             ▼
+                                      Contenedor odoo   Gmail API    API pública TRM
+                                              │            (externa)   (datos.gov.co)
+                                              ▼
+                                      Contenedor db (PostgreSQL)
 ```
 
-**Principio de diseño:** el modelo de lenguaje no tiene acceso directo a Odoo, PostgreSQL, Gmail ni a la API de TRM. Toda interacción pasa exclusivamente por las herramientas expuestas por el servidor MCP.
+**Principio de diseño:** el modelo de lenguaje no tiene acceso directo a Odoo, PostgreSQL, Gmail ni a la API de TRM. La aplicación web es el único punto de entrada del usuario final y actúa como cliente MCP: recibe el mensaje, se lo pasa a Claude junto con las herramientas disponibles, y cuando el modelo solicita usar una, la aplicación la ejecuta contra el servidor MCP. Toda interacción con los sistemas empresariales pasa exclusivamente por las herramientas expuestas por ese servidor.
+
+> Durante el desarrollo se usó Claude Desktop como herramienta de depuración del servidor MCP, pero no forma parte de la arquitectura de la solución entregada.
 
 ## Estructura del repositorio
 
@@ -30,19 +36,27 @@ Contenedor db (PostgreSQL)
 proyecto-mcp-odoo/
 ├── docker-compose.yml
 ├── Plan_de_Pruebas_y_Guion_Sustentacion.docx
+├── Tutorial_Instalacion_Configuracion_MCP.docx
 ├── odoo/addons/
-└── mcp-server/
+├── mcp-server/
+│   ├── Dockerfile
+│   ├── requirements.txt
+│   ├── .env.example
+│   ├── server.py
+│   ├── tools/
+│   │   ├── odoo_client.py / odoo_tools.py
+│   │   ├── gmail_client.py / gmail_tools.py
+│   │   ├── trm_client.py / trm_tools.py
+│   │   ├── reportes_client.py / reportes_tools.py
+│   │   └── excepciones.py
+│   └── logs/trazabilidad.py
+└── webapp/
     ├── Dockerfile
     ├── requirements.txt
-    ├── .env.example        # plantilla de variables de entorno (sin valores reales)
-    ├── server.py
-    ├── tools/
-    │   ├── odoo_client.py / odoo_tools.py
-    │   ├── gmail_client.py / gmail_tools.py
-    │   ├── trm_client.py / trm_tools.py
-    │   ├── reportes_client.py / reportes_tools.py
-    │   └── excepciones.py
-    └── logs/trazabilidad.py
+    ├── .env.example
+    ├── app.py            # servidor Flask
+    ├── mcp_bridge.py      # cliente MCP propio + orquestación con la API de Claude
+    └── templates/index.html
 ```
 
 ## Herramientas MCP expuestas
@@ -65,36 +79,34 @@ Cada invocación se registra automáticamente (herramienta, parámetros, duraci�
 
 ## Cómo levantar el proyecto
 
-1. Crear `mcp-server/.env` a partir de `mcp-server/.env.example`, con tus propios datos de Odoo.
+1. Crear `mcp-server/.env` a partir de `mcp-server/.env.example`, con los datos de conexión a Odoo.
 2. Colocar `credentials.json` de Gmail (obtenido en Google Cloud Console) dentro de `mcp-server/`. `token.json` se genera solo en el primer uso.
-3. Levantar todo:
+3. Crear `webapp/.env` a partir de `webapp/.env.example`, con una API key propia de Anthropic ([console.anthropic.com](https://console.anthropic.com); el uso por API se factura aparte de una cuenta de claude.ai).
+4. Levantar todo:
    ```bash
    docker compose up -d --build
-   docker compose ps   # confirmar que db, odoo y mcp-server estén "Up"
+   docker compose ps   # confirmar que db, odoo, mcp-server y webapp estén "Up"
    ```
-4. Acceder a Odoo en `http://localhost:8069`.
-5. Conectar Claude Desktop al servidor (`http://localhost:8000/mcp`) usando el puente `mcp-remote` en `claude_desktop_config.json`:
-   ```json
-   {
-     "mcpServers": {
-       "odoo-mcp-server": {
-         "command": "npx",
-         "args": ["mcp-remote", "http://localhost:8000/mcp"]
-       }
-     }
-   }
-   ```
+5. Acceder a Odoo en `http://localhost:8069` (administración del ERP).
+6. Acceder a la aplicación para el usuario final en **`http://localhost:5000`**.
 
 > Ni `.env`, ni `credentials.json`, ni `token.json` están incluidos en este repositorio (excluidos en `.gitignore` por seguridad).
 
-## Manejo de errores
+## Manejo de errores y resiliencia
 
-Cada integración (Odoo, Gmail, TRM) devuelve un error controlado si el servicio no está disponible, en vez de un error crudo.
+Cada integración (Odoo, Gmail, TRM) devuelve un error controlado si el servicio no está disponible, en vez de un error crudo, y el resto del sistema sigue funcionando con normalidad. El servidor MCP reintenta la conexión a Odoo al arrancar (hasta 10 intentos con espera de 3s) para tolerar tiempos de inicialización del contenedor.
 
-## Autores
+Prueba manual de resiliencia (sin reiniciar contenedores):
+```bash
+# Simular caída de Odoo
+docker compose stop odoo
+docker compose start odoo   # recuperación automática vía reintentos
 
-Amaurys Castro De Arco -
-Daniel Jimenez Salcedo -
-Sofía Marcela Suancha Contreras
-— Curso de Sistemas Distribuidos -
-2026.
+# Simular caída de la API de TRM o de Gmail, sin reiniciar el servidor MCP
+docker compose exec mcp-server sh -c "echo '127.0.0.1 www.datos.gov.co' >> /etc/hosts"
+docker compose exec mcp-server sh -c "grep -v 'datos.gov.co' /etc/hosts > /tmp/hosts.nuevo && cat /tmp/hosts.nuevo > /etc/hosts"
+```
+
+## Autor
+
+Sofía Suancha — Curso de Sistemas Distribuidos, 2026.

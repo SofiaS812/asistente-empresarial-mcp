@@ -1,8 +1,9 @@
+import os
 import requests
 from datetime import datetime
 from tools.excepciones import TRMNoDisponibleError
 
-TRM_API_URL = "https://www.datos.gov.co/resource/32sa-8pi3.json"
+TRM_API_URL = os.getenv("TRM_API_URL", "https://www.datos.gov.co/resource/32sa-8pi3.json")
 
 
 def consultar_trm_actual() -> dict:
