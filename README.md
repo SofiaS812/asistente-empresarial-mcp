@@ -2,11 +2,9 @@
 
 Proyecto de la asignatura **Sistemas Distribuidos**. Implementa un asistente empresarial que permite a un usuario final consultar y ejecutar operaciones sobre distintos sistemas de información (ERP, correo electrónico y una API pública) mediante lenguaje natural, usando **exclusivamente** el protocolo **MCP** como mecanismo de integración entre el modelo de lenguaje y los sistemas empresariales.
 
-## Evaluación / Sustentación
+## Tutorial de instalación 
 
-- 📄 **Plan de pruebas:** [`Plan_de_Pruebas_y_Guion_Sustentacion.docx`](./Plan_de_Pruebas_y_Guion_Sustentacion.docx) — 23 ítems evaluados, pasos de prueba y resultados, ejecutados desde la aplicación web.
 - 📄 **Tutorial de instalación y configuración de MCP:** [`Tutorial_Instalacion_Configuracion_MCP.docx`](./Tutorial_Instalacion_Configuracion_MCP.docx) — conceptualización, guía práctica con código y dos casos de estudio reales.
-- 🎥 **Video de sustentación:** [enlace a YouTube](PEGAR_AQUÍ_EL_ENLACE)
 
 ## Arquitectura
 
@@ -28,14 +26,11 @@ Contenedor webapp (Flask + cliente MCP propio)
 
 **Principio de diseño:** el modelo de lenguaje no tiene acceso directo a Odoo, PostgreSQL, Gmail ni a la API de TRM. La aplicación web es el único punto de entrada del usuario final y actúa como cliente MCP: recibe el mensaje, se lo pasa a Claude junto con las herramientas disponibles, y cuando el modelo solicita usar una, la aplicación la ejecuta contra el servidor MCP. Toda interacción con los sistemas empresariales pasa exclusivamente por las herramientas expuestas por ese servidor.
 
-> Durante el desarrollo se usó Claude Desktop como herramienta de depuración del servidor MCP, pero no forma parte de la arquitectura de la solución entregada.
-
 ## Estructura del repositorio
 
 ```
 proyecto-mcp-odoo/
 ├── docker-compose.yml
-├── Plan_de_Pruebas_y_Guion_Sustentacion.docx
 ├── Tutorial_Instalacion_Configuracion_MCP.docx
 ├── odoo/addons/
 ├── mcp-server/
@@ -109,4 +104,4 @@ docker compose exec mcp-server sh -c "grep -v 'datos.gov.co' /etc/hosts > /tmp/h
 
 ## Autor
 
-Sofía Suancha — Curso de Sistemas Distribuidos, 2026.
+Daniel Jimenez - Sofía Suancha - Amaurys Castro — Curso de Sistemas Distribuidos, 2026.
