@@ -75,7 +75,17 @@ Cada invocación se registra automáticamente (herramienta, parámetros, duraci�
 ## Cómo levantar el proyecto
 
 1. Crear `mcp-server/.env` a partir de `mcp-server/.env.example`, con los datos de conexión a Odoo.
-2. Colocar `credentials.json` de Gmail (obtenido en Google Cloud Console) dentro de `mcp-server/`. `token.json` se genera solo en el primer uso.
+2. Colocar `credentials.json` de Gmail (obtenido en Google Cloud Console) dentro de `mcp-server/`.
+
+   El archivo `token.json` **no se genera dentro de Docker** (el flujo de autorización de Google necesita abrir una ventana de navegador interactiva, y un contenedor no tiene pantalla). Se genera una única vez, fuera de Docker, así:
+   ```bash
+   cd mcp-server
+   python -m venv venv
+   venv\Scripts\activate          # Windows
+   pip install -r requirements.txt
+   python -c "from tools.gmail_client import enviar_correo; enviar_correo('tu_correo@gmail.com', 'Prueba', 'Generando token')"
+   ```
+   Esto abre el navegador para iniciar sesión y autorizar el acceso (usar la misma cuenta configurada como usuario de prueba en Google Cloud Console). Al terminar, queda creado `mcp-server/token.json`, que Docker sí puede usar directamente después, sin volver a pedir login.
 3. Crear `webapp/.env` a partir de `webapp/.env.example`, con una API key propia de Anthropic ([console.anthropic.com](https://console.anthropic.com); el uso por API se factura aparte de una cuenta de claude.ai).
 4. Levantar todo:
    ```bash
@@ -86,6 +96,25 @@ Cada invocación se registra automáticamente (herramienta, parámetros, duraci�
 6. Acceder a la aplicación para el usuario final en **`http://localhost:5000`**.
 
 > Ni `.env`, ni `credentials.json`, ni `token.json` están incluidos en este repositorio (excluidos en `.gitignore` por seguridad).
+
+## Poblar Odoo con datos de prueba
+
+Los datos de Odoo (clientes, productos, facturas) viven en un volumen de Docker generado en tiempo de ejecución y **no se incluyen en este repositorio**. Al clonar el proyecto y levantarlo por primera vez, Odoo inicia sin ningún dato: es necesario crearlos manualmente siguiendo estos pasos, una única vez, para poder reproducir los escenarios de prueba.
+
+1. **Crear la base de datos:** entrar a `http://localhost:8069`, crear una base de datos nueva (por ejemplo `empresa_demo`), con país **Colombia**.
+2. **Activar los módulos:** desde Aplicaciones, activar **Facturación** e **Inventario**.
+3. **Activar multi-moneda:** en Facturación → Configuración → Monedas, habilitar **USD** además de la moneda local (COP).
+4. **Crear clientes:** en Facturación → Clientes → Nuevo, crear al menos 5-6 clientes (mezcla de "Empresa" y "Persona"), con:
+   - Al menos un cliente con país distinto a Colombia (para facturarle en USD).
+   - Correos electrónicos reales de Gmail que se controlen, para probar el envío y la consulta de correos.
+5. **Crear productos:** en Facturación → Productos → Nuevo, crear 6-8 productos ("Producto almacenable" o "Servicio"), con stock inicial variado (alto, bajo y en cero) desde Inventario.
+6. **Crear facturas:** en Facturación → Clientes → Facturas → Nueva, crear varias facturas cubriendo los siguientes escenarios:
+   - 2-3 facturas en **COP**, confirmadas.
+   - Al menos 1 factura en **USD**, confirmada (para probar la conversión con la API de TRM).
+   - Al menos 1 factura en **estado borrador** (sin confirmar), para mostrar variedad de estados.
+7. **Ajustar la configuración del servidor MCP:** anotar el nombre exacto de la base de datos creada y el usuario/contraseña de administrador, y completarlos en `mcp-server/.env` (`ODOO_DB`, `ODOO_USER`, `ODOO_PASSWORD`).
+
+Con estos datos, todas las herramientas del servidor MCP (`consultar_clientes`, `consultar_facturas`, `consultar_inventario`, la conversión con TRM, el envío y consulta de correos, y la generación de reportes) tienen información real suficiente para ejecutarse y realizar pruebas.
 
 ## Manejo de errores y resiliencia
 
